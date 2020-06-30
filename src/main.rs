@@ -13,7 +13,6 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-#[allow(dead_code)]
 mod util;
 
 enum InputMode {
@@ -60,13 +59,23 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .margin(2)
                 .constraints(
                     [
+                        Constraint::Min(1),
                         Constraint::Length(1),
                         Constraint::Length(3),
-                        Constraint::Min(1),
                     ]
                     .as_ref(),
                 )
                 .split(f.size());
+
+
+            let messages = app
+                .messages
+                .iter()
+                .enumerate()
+                .map(|(i, m)| Text::raw(format!("{}: {}", i, m)));
+            let messages =
+                List::new(messages).block(Block::default().borders(Borders::ALL).title("Messages"));
+                f.render_widget(messages, chunks[0]);
 
             let msg = match app.input_mode {
                 InputMode::Normal => "Press q to exit, e to start editing.",
@@ -74,13 +83,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
             let text = [Text::raw(msg)];
             let help_message = Paragraph::new(text.iter());
-            f.render_widget(help_message, chunks[0]);
+            f.render_widget(help_message, chunks[1]);
 
             let text = [Text::raw(&app.input)];
             let input = Paragraph::new(text.iter())
                 .style(Style::default().fg(Color::Yellow))
                 .block(Block::default().borders(Borders::ALL).title("Input"));
-            f.render_widget(input, chunks[1]);
+            f.render_widget(input, chunks[2]);
             match app.input_mode {
                 InputMode::Normal =>
                     // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
@@ -90,21 +99,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //// Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
                     f.set_cursor(
                         // Put cursor past the end of the input text
-                        chunks[1].x + app.input.width() as u16 + 1,
+                        chunks[2].x + app.input.width() as u16 + 1,
                         // Move one line down, from the border to the input line
-                        chunks[1].y + 1,
+                        chunks[2].y + 1,
                     );
                 }
             }
-
-            let messages = app
-                .messages
-                .iter()
-                .enumerate()
-                .map(|(i, m)| Text::raw(format!("{}: {}", i, m)));
-            let messages =
-                List::new(messages).block(Block::default().borders(Borders::ALL).title("Messages"));
-                f.render_widget(messages, chunks[2]);
         })?;
 
         // Handle input
