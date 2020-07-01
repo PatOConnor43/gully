@@ -1,4 +1,5 @@
 mod app;
+mod config;
 mod util;
 
 
@@ -6,7 +7,7 @@ use youtube_api;
 use crate::util::event::{Event, Events};
 use crate::app::{App, InputMode};
 use std::{error::Error, io};
-use termion::{cursor::Goto, event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
+use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
     layout::{Constraint, Direction, Layout},
@@ -15,8 +16,6 @@ use tui::{
     Terminal,
 };
 use unicode_width::UnicodeWidthStr;
-
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Terminal initialization
