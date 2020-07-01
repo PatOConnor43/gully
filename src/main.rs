@@ -1,7 +1,10 @@
-use std::path::Path;
-use youtube_dl::{model, YoutubeDl};
+mod app;
+mod util;
 
+
+use youtube_api;
 use crate::util::event::{Event, Events};
+use crate::app::{App, InputMode};
 use std::{error::Error, io};
 use termion::{cursor::Goto, event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
@@ -13,32 +16,7 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-mod util;
 
-enum InputMode {
-    Normal,
-    Editing,
-}
-
-/// App holds the state of the application
-struct App {
-    /// Current value of the input box
-    input: String,
-    /// Current input mode
-    input_mode: InputMode,
-    /// History of recorded messages
-    messages: Vec<String>,
-}
-
-impl Default for App {
-    fn default() -> App {
-        App {
-            input: String::new(),
-            input_mode: InputMode::Normal,
-            messages: Vec::new(),
-        }
-    }
-}
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Terminal initialization

@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 youtube_dl = "0.5.0"
+youtube-api = "*"
 tui = { git = "https://github.com/fdehau/tui-rs" }
 termion = "^1.5.0"
 unicode-width = "^0.1.0"
