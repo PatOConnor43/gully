@@ -2,22 +2,34 @@ mod app;
 mod config;
 mod util;
 
-
-use youtube_api;
-use crate::util::event::{Event, Events};
 use crate::app::{App, InputMode};
+use crate::util::event::{Event, Events};
 use std::{error::Error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style},
     widgets::{Block, Borders, List, Paragraph, Text},
     Terminal,
 };
 use unicode_width::UnicodeWidthStr;
+use youtube_api;
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    if let Ok(c) = load_config() {
+        start_ui(c)
+    } else {
+        panic!("Could not create config")
+    }
+}
+
+fn load_config() -> Result<config::Config, Box<dyn Error>> {
+    Ok(config::Config::default())
+}
+
+fn start_ui(c: config::Config) -> Result<(), Box<dyn Error>> {
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
@@ -27,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut events = Events::new();
 
     // Create default app state
-    let mut app = App::default();
+    let mut app = App::with_config(c);
 
     loop {
         terminal.draw(|f| {
@@ -44,15 +56,27 @@ fn main() -> Result<(), Box<dyn Error>> {
                 )
                 .split(f.size());
 
-
             let messages = app
                 .messages
                 .iter()
                 .enumerate()
                 .map(|(i, m)| Text::raw(format!("{}: {}", i, m)));
-            let messages =
-                List::new(messages).block(Block::default().borders(Borders::ALL).title("Messages"));
-                f.render_widget(messages, chunks[0]);
+            let messages = [Text::raw(
+                r#"
+                             
+  _____  ___   _ 
+ / _ \ \/ / | | |
+| (_) >  <| |_| |
+ \___/_/\_\\__, |
+           |___/ 
+
+"#,
+            )];
+
+            let messages = Paragraph::new(messages.iter())
+                .block(Block::default().borders(Borders::NONE))
+                .alignment(Alignment::Center);
+            f.render_widget(messages, chunks[0]);
 
             let msg = match app.input_mode {
                 InputMode::Normal => "Press q to exit, e to start editing.",
@@ -70,7 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             match app.input_mode {
                 InputMode::Normal =>
                     // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-                {}
+                    {}
 
                 InputMode::Editing => {
                     //// Make the cursor visible and ask tui-rs to put it at the specified coordinates after rendering
