@@ -3,6 +3,12 @@ use crate::events;
 use crate::state;
 use anyhow::Result;
 use termion::event::Key;
+
+pub enum AppLifecyle {
+    Continue,
+    Quit,
+}
+
 /// App holds the state of the application
 #[derive(Default)]
 pub struct App {
@@ -38,15 +44,41 @@ impl App {
             _ => {}
         }
     }
-    pub fn next_event(&self) -> Result<events::Event<Key>> {
-        self.events
-            .next()
-            .map_err(|_| anyhow::anyhow!("receive error for event"))
-    }
     pub fn mode(&self) -> state::InputMode {
         self.state.input_mode
     }
     pub fn state(&self) -> &state::State {
         &self.state
+    }
+    pub fn tick(&mut self) -> Result<AppLifecyle> {
+        if let events::Event::Input(input) = self.events.next()? {
+            match self.mode() {
+                state::InputMode::Normal => match input {
+                    Key::Char('e') => {
+                        self.dispatch(events::Event::ChangeInputMode(state::InputMode::Editing));
+                    }
+                    Key::Char('q') => {
+                        return Ok(AppLifecyle::Quit);
+                    }
+                    _ => {}
+                },
+                state::InputMode::Editing => match input {
+                    Key::Char('\n') => {
+                        self.dispatch(events::Event::SubmitInput);
+                    }
+                    Key::Char(c) => {
+                        self.dispatch(events::Event::InputPush(c));
+                    }
+                    Key::Backspace => {
+                        self.dispatch(events::Event::InputPop);
+                    }
+                    Key::Esc => {
+                        self.dispatch(events::Event::ChangeInputMode(state::InputMode::Normal));
+                    }
+                    _ => {}
+                },
+            }
+        }
+        Ok(AppLifecyle::Continue)
     }
 }

@@ -75,7 +75,7 @@ fn start_ui(c: config::Config) -> Result<()> {
                 .alignment(Alignment::Center);
             f.render_widget(messages, chunks[0]);
 
-            let msg = match app.state().input_mode {
+            let msg = match app.mode() {
                 InputMode::Normal => "Press q to exit, e to start editing.",
                 InputMode::Editing => "Press Esc to stop editing, Enter to record the message",
             };
@@ -88,7 +88,7 @@ fn start_ui(c: config::Config) -> Result<()> {
                 .style(Style::default().fg(Color::Yellow))
                 .block(Block::default().borders(Borders::ALL).title("Input"));
             f.render_widget(input, chunks[2]);
-            match app.state().input_mode {
+            match app.mode() {
                 InputMode::Normal =>
                     // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
                     {}
@@ -106,33 +106,12 @@ fn start_ui(c: config::Config) -> Result<()> {
         })?;
 
         // Handle input
-        if let Event::Input(input) = app.next_event()? {
-            match app.mode() {
-                InputMode::Normal => match input {
-                    Key::Char('e') => {
-                        app.dispatch(events::Event::ChangeInputMode(InputMode::Editing));
-                    }
-                    Key::Char('q') => {
-                        break;
-                    }
-                    _ => {}
-                },
-                InputMode::Editing => match input {
-                    Key::Char('\n') => {
-                        app.dispatch(events::Event::SubmitInput);
-                    }
-                    Key::Char(c) => {
-                        app.dispatch(events::Event::InputPush(c));
-                    }
-                    Key::Backspace => {
-                        app.dispatch(events::Event::InputPop);
-                    }
-                    Key::Esc => {
-                        app.dispatch(events::Event::ChangeInputMode(InputMode::Normal));
-                    }
-                    _ => {}
-                },
+        match app.tick() {
+            Ok(app::AppLifecyle::Continue) => {}
+            Ok(app::AppLifecyle::Quit) => {
+                break;
             }
+            Err(e) => panic!(e),
         }
     }
     Ok(())
