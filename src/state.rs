@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub struct State {
     /// Current value of the input box
     pub input: String,
@@ -16,6 +17,7 @@ impl Default for State {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum InputMode {
     Normal,
     Editing,

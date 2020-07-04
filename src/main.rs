@@ -1,11 +1,12 @@
 mod app;
 mod config;
+mod events;
 mod state;
-mod util;
 
 use crate::app::App;
+use crate::events::{Event, Events};
 use crate::state::{InputMode, State};
-use crate::util::event::{Event, Events};
+use anyhow::Result;
 use std::{error::Error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
@@ -19,7 +20,7 @@ use unicode_width::UnicodeWidthStr;
 use youtube_api;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     if let Ok(c) = load_config() {
         start_ui(c)
     } else {
@@ -31,14 +32,13 @@ fn load_config() -> Result<config::Config, Box<dyn Error>> {
     Ok(config::Config::default())
 }
 
-fn start_ui(c: config::Config) -> Result<(), Box<dyn Error>> {
+fn start_ui(c: config::Config) -> Result<()> {
     // Terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    let mut events = Events::new();
 
     // Create default app state
     let mut app = App::with_config(c);
@@ -83,7 +83,7 @@ fn start_ui(c: config::Config) -> Result<(), Box<dyn Error>> {
             let help_message = Paragraph::new(text.iter());
             f.render_widget(help_message, chunks[1]);
 
-            let text = [Text::raw("placeholder")];
+            let text = [Text::raw(app.state().input.clone())];
             let input = Paragraph::new(text.iter())
                 .style(Style::default().fg(Color::Yellow))
                 .block(Block::default().borders(Borders::ALL).title("Input"));
@@ -106,12 +106,11 @@ fn start_ui(c: config::Config) -> Result<(), Box<dyn Error>> {
         })?;
 
         // Handle input
-        if let Event::Input(input) = events.next()? {
-            match app.state().input_mode {
+        if let Event::Input(input) = app.next_event()? {
+            match app.mode() {
                 InputMode::Normal => match input {
                     Key::Char('e') => {
-                        app.state().input_mode = InputMode::Editing;
-                        events.disable_exit_key();
+                        app.dispatch(events::Event::ChangeInputMode(InputMode::Editing));
                     }
                     Key::Char('q') => {
                         break;
@@ -120,19 +119,16 @@ fn start_ui(c: config::Config) -> Result<(), Box<dyn Error>> {
                 },
                 InputMode::Editing => match input {
                     Key::Char('\n') => {
-                        app.state()
-                            .messages
-                            .push(app.state().input.drain(..).collect());
+                        app.dispatch(events::Event::SubmitInput);
                     }
                     Key::Char(c) => {
-                        app.state().input.push(c);
+                        app.dispatch(events::Event::InputPush(c));
                     }
                     Key::Backspace => {
-                        app.state().input.pop();
+                        app.dispatch(events::Event::InputPop);
                     }
                     Key::Esc => {
-                        app.state().input_mode = InputMode::Normal;
-                        events.enable_exit_key();
+                        app.dispatch(events::Event::ChangeInputMode(InputMode::Normal));
                     }
                     _ => {}
                 },

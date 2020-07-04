@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::{config::Config, state::InputMode};
 use std::io;
 use std::sync::mpsc;
 use std::sync::{
@@ -12,7 +12,16 @@ use termion::input::TermRead;
 
 pub enum Event<I> {
     Input(I),
+    InputPop,
+    InputPush(char),
+    ChangeInputMode(InputMode),
+    IOEvent(IOEventType),
+    SubmitInput,
     Tick,
+}
+
+pub enum IOEventType {
+    Load,
 }
 
 /// A small event handler that wrap termion input and tick events. Each event
@@ -22,6 +31,11 @@ pub struct Events {
     input_handle: thread::JoinHandle<()>,
     ignore_exit_key: Arc<AtomicBool>,
     tick_handle: thread::JoinHandle<()>,
+}
+impl Default for Events {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Events {
@@ -43,13 +57,16 @@ impl Events {
                             eprintln!("{}", err);
                             return;
                         }
-                        if !ignore_exit_key.load(Ordering::Relaxed) && key == config.keys().exit_key() {
+                        if !ignore_exit_key.load(Ordering::Relaxed)
+                            && key == config.keys().exit_key()
+                        {
                             return;
                         }
                     }
                 }
             })
         };
+        let network_handle = tx.clone();
         let tick_handle = {
             thread::spawn(move || loop {
                 tx.send(Event::Tick).unwrap();
@@ -74,5 +91,12 @@ impl Events {
 
     pub fn enable_exit_key(&mut self) {
         self.ignore_exit_key.store(false, Ordering::Relaxed);
+    }
+
+    pub fn dispatch_io_event(&self, e: IOEventType) {
+        thread::spawn(move || async {});
+        match e {
+            IOEventType::Load => todo!(),
+        }
     }
 }
