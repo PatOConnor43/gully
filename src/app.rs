@@ -1,8 +1,10 @@
 use crate::config;
 use crate::events;
 use crate::state;
+use crate::ui;
 use anyhow::Result;
 use termion::event::Key;
+use tui::{backend::Backend, Frame};
 
 pub enum AppLifecyle {
     Continue,
@@ -44,11 +46,14 @@ impl App {
             _ => {}
         }
     }
+    pub fn draw<B>(&self, f: &mut Frame<B>)
+    where
+        B: Backend,
+    {
+        ui::demo(f, &self.state);
+    }
     pub fn mode(&self) -> state::InputMode {
         self.state.input_mode
-    }
-    pub fn state(&self) -> &state::State {
-        &self.state
     }
     pub fn tick(&mut self) -> Result<AppLifecyle> {
         if let events::Event::Input(input) = self.events.next()? {
