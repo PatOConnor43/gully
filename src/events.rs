@@ -10,24 +10,20 @@ use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
 
-pub enum Event<I> {
-    Input(I),
+pub enum Event {
+    Input(Key),
     InputPop,
     InputPush(char),
     ChangeInputMode(InputMode),
-    IOEvent(IOEventType),
     SubmitInput,
     Tick,
-}
-
-pub enum IOEventType {
-    Load,
+    YoutubeQuery(String),
 }
 
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
-    rx: mpsc::Receiver<Event<Key>>,
+    rx: mpsc::Receiver<Event>,
     input_handle: thread::JoinHandle<()>,
     ignore_exit_key: Arc<AtomicBool>,
     tick_handle: thread::JoinHandle<()>,
@@ -66,7 +62,6 @@ impl Events {
                 }
             })
         };
-        let network_handle = tx.clone();
         let tick_handle = {
             thread::spawn(move || loop {
                 tx.send(Event::Tick).unwrap();
@@ -81,22 +76,7 @@ impl Events {
         }
     }
 
-    pub fn next(&self) -> Result<Event<Key>, mpsc::RecvError> {
+    pub fn next(&self) -> Result<Event, mpsc::RecvError> {
         self.rx.recv()
-    }
-
-    pub fn disable_exit_key(&mut self) {
-        self.ignore_exit_key.store(true, Ordering::Relaxed);
-    }
-
-    pub fn enable_exit_key(&mut self) {
-        self.ignore_exit_key.store(false, Ordering::Relaxed);
-    }
-
-    pub fn dispatch_io_event(&self, e: IOEventType) {
-        thread::spawn(move || async {});
-        match e {
-            IOEventType::Load => todo!(),
-        }
     }
 }

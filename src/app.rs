@@ -21,13 +21,15 @@ pub struct App {
 
 impl App {
     pub fn with_config(c: config::Config) -> Self {
-        App {
+        let mut app = App {
             config: c,
             events: events::Events::default(),
             state: state::State::default(),
-        }
+        };
+        app.dispatch(events::Event::YoutubeQuery("ryan celsius".to_owned()));
+        app
     }
-    pub fn dispatch(&mut self, e: events::Event<Key>) {
+    pub fn dispatch(&mut self, e: events::Event) {
         match e {
             events::Event::ChangeInputMode(i) => {
                 self.state.input_mode = i;
@@ -57,13 +59,14 @@ impl App {
     }
     pub fn tick(&mut self) -> Result<AppLifecyle> {
         if let events::Event::Input(input) = self.events.next()? {
+            // bail early if we ^C
+            if input == self.config.keys().exit_key() {
+                return Ok(AppLifecyle::Quit);
+            }
             match self.mode() {
                 state::InputMode::Normal => match input {
                     Key::Char('e') => {
                         self.dispatch(events::Event::ChangeInputMode(state::InputMode::Editing));
-                    }
-                    Key::Char('q') => {
-                        return Ok(AppLifecyle::Quit);
                     }
                     _ => {}
                 },
