@@ -5,7 +5,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use std::thread;
+use std::{thread, time::Duration};
 
 use termion::event::Key;
 use termion::input::TermRead;
@@ -28,18 +28,9 @@ pub struct Events {
     ignore_exit_key: Arc<AtomicBool>,
     tick_handle: thread::JoinHandle<()>,
 }
-impl Default for Events {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl Events {
-    pub fn new() -> Events {
-        Events::with_config(Config::default())
-    }
-
-    pub fn with_config(config: Config) -> Events {
+    pub fn new(exit_key: Key, tick_rate: Duration) -> Events {
         let (tx, rx) = mpsc::channel();
         let ignore_exit_key = Arc::new(AtomicBool::new(false));
         let input_handle = {
@@ -53,9 +44,7 @@ impl Events {
                             eprintln!("{}", err);
                             return;
                         }
-                        if !ignore_exit_key.load(Ordering::Relaxed)
-                            && key == config.keys().exit_key()
-                        {
+                        if !ignore_exit_key.load(Ordering::Relaxed) && key == exit_key {
                             return;
                         }
                     }
@@ -65,7 +54,7 @@ impl Events {
         let tick_handle = {
             thread::spawn(move || loop {
                 tx.send(Event::Tick).unwrap();
-                thread::sleep(config.behavior().tick_rate());
+                thread::sleep(tick_rate);
             })
         };
         Events {

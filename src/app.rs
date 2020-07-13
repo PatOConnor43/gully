@@ -1,10 +1,13 @@
+use crate::client;
 use crate::config;
 use crate::events;
 use crate::state;
 use crate::ui;
 use anyhow::Result;
+use std::{sync::Arc, thread};
 use termion::event::Key;
 use tui::{backend::Backend, Frame};
+use youtube_api::YoutubeApi;
 
 pub enum AppLifecyle {
     Continue,
@@ -12,18 +15,19 @@ pub enum AppLifecyle {
 }
 
 /// App holds the state of the application
-#[derive(Default)]
 pub struct App {
+    api: YoutubeApi,
     config: config::Config,
     events: events::Events,
     state: state::State,
 }
 
 impl App {
-    pub fn with_config(c: config::Config) -> Self {
+    pub fn with_config(api: YoutubeApi, c: config::Config) -> Self {
         let mut app = App {
-            config: c,
-            events: events::Events::default(),
+            api,
+            config: c.clone(),
+            events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate()),
             state: state::State::default(),
         };
         app.dispatch(events::Event::YoutubeQuery("ryan celsius".to_owned()));
@@ -58,34 +62,40 @@ impl App {
         self.state.input_mode
     }
     pub fn tick(&mut self) -> Result<AppLifecyle> {
-        if let events::Event::Input(input) = self.events.next()? {
-            // bail early if we ^C
-            if input == self.config.keys().exit_key() {
-                return Ok(AppLifecyle::Quit);
+        match self.events.next()? {
+            events::Event::Input(input) => {
+                // bail early if we ^C
+                if input == self.config.keys().exit_key() {
+                    return Ok(AppLifecyle::Quit);
+                }
+
+                match self.mode() {
+                    state::InputMode::Normal => match input {
+                        Key::Char('e') => {
+                            self.dispatch(events::Event::ChangeInputMode(
+                                state::InputMode::Editing,
+                            ));
+                        }
+                        _ => {}
+                    },
+                    state::InputMode::Editing => match input {
+                        Key::Char('\n') => {
+                            self.dispatch(events::Event::SubmitInput);
+                        }
+                        Key::Char(c) => {
+                            self.dispatch(events::Event::InputPush(c));
+                        }
+                        Key::Backspace => {
+                            self.dispatch(events::Event::InputPop);
+                        }
+                        Key::Esc => {
+                            self.dispatch(events::Event::ChangeInputMode(state::InputMode::Normal));
+                        }
+                        _ => {}
+                    },
+                }
             }
-            match self.mode() {
-                state::InputMode::Normal => match input {
-                    Key::Char('e') => {
-                        self.dispatch(events::Event::ChangeInputMode(state::InputMode::Editing));
-                    }
-                    _ => {}
-                },
-                state::InputMode::Editing => match input {
-                    Key::Char('\n') => {
-                        self.dispatch(events::Event::SubmitInput);
-                    }
-                    Key::Char(c) => {
-                        self.dispatch(events::Event::InputPush(c));
-                    }
-                    Key::Backspace => {
-                        self.dispatch(events::Event::InputPop);
-                    }
-                    Key::Esc => {
-                        self.dispatch(events::Event::ChangeInputMode(state::InputMode::Normal));
-                    }
-                    _ => {}
-                },
-            }
+            _ => {}
         }
         Ok(AppLifecyle::Continue)
     }

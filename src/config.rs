@@ -1,15 +1,18 @@
 use std::time::Duration;
 use termion::event::Key;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Config {
+    api_key: String,
     behavior: BehaviorConfig,
     keys: KeyConfig,
 }
 
 impl Default for Config {
     fn default() -> Self {
+        let key = env!("YOUTUBE_API_KEY");
         Self {
+            api_key: key.to_owned(),
             behavior: BehaviorConfig::default(),
             keys: KeyConfig::default(),
         }
@@ -17,6 +20,9 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn api_key(&self) -> &str {
+        &self.api_key
+    }
     pub fn behavior(&self) -> BehaviorConfig {
         self.behavior
     }
