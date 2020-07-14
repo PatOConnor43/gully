@@ -4,7 +4,7 @@ use crate::events;
 use crate::state;
 use crate::ui;
 use anyhow::Result;
-use std::{sync::Arc, thread};
+use std::sync::mpsc::{Receiver, Sender};
 use termion::event::Key;
 use tui::{backend::Backend, Frame};
 use youtube_api::YoutubeApi;
@@ -16,16 +16,22 @@ pub enum AppLifecyle {
 
 /// App holds the state of the application
 pub struct App {
-    api: YoutubeApi,
+    app_event_rx: Receiver<events::AppActions>,
+    background_event_tx: Sender<events::BackgroundActions>,
     config: config::Config,
     events: events::Events,
     state: state::State,
 }
 
 impl App {
-    pub fn with_config(api: YoutubeApi, c: config::Config) -> Self {
+    pub fn new(
+        rx: Receiver<events::AppActions>,
+        tx: Sender<events::BackgroundActions>,
+        c: config::Config,
+    ) -> Self {
         let mut app = App {
-            api,
+            app_event_rx: rx,
+            background_event_tx: tx,
             config: c.clone(),
             events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate()),
             state: state::State::default(),

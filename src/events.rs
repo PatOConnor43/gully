@@ -20,6 +20,14 @@ pub enum Event {
     YoutubeQuery(String),
 }
 
+/// AppActions should be handled by the app, dispatched by a background task.
+pub enum AppActions {}
+
+/// BackgroundActions should be handled by the background task queue, dispatched by the app.
+pub enum BackgroundActions {
+    YoutubeQuery(String),
+}
+
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
