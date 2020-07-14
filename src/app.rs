@@ -36,7 +36,10 @@ impl App {
             events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate()),
             state: state::State::default(),
         };
-        app.dispatch(events::Event::YoutubeQuery("ryan celsius".to_owned()));
+        app.background_event_tx
+            .send(events::BackgroundActions::YoutubeQuery(
+                "ryan celsius".to_owned(),
+            ));
         app
     }
     pub fn dispatch(&mut self, e: events::Event) {

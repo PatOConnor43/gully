@@ -1,11 +1,11 @@
 mod app;
-mod client;
 mod config;
 mod events;
 mod state;
 mod ui;
 
 use crate::app::App;
+use crate::events::{AppActions, BackgroundActions};
 use anyhow::Result;
 use std::io;
 use std::sync::mpsc;
@@ -23,13 +23,26 @@ impl<T> BackgroundTaskHandler<T> {
         Self { api, sender }
     }
 
-    pub async fn handle_event(&self, e: events::BackgroundActions) {}
+    pub async fn handle_event(&self, e: BackgroundActions) {
+        match e {
+            BackgroundActions::YoutubeQuery(q) => {
+                let result = self
+                    .api
+                    .search(youtube_api::models::SearchRequestBuilder {
+                        query: Some(q),
+                        channel_id: None,
+                    })
+                    .await;
+                eprintln!("{:?}", result);
+            }
+        }
+    }
 }
 
 #[tokio::main]
 async fn start_background_task_handler(
-    rx: std::sync::mpsc::Receiver<events::BackgroundActions>,
-    tx: std::sync::mpsc::Sender<events::AppActions>,
+    rx: std::sync::mpsc::Receiver<BackgroundActions>,
+    tx: std::sync::mpsc::Sender<AppActions>,
     api: YoutubeApi,
 ) {
     let handler = BackgroundTaskHandler::new(api, tx);
@@ -42,8 +55,8 @@ async fn start_background_task_handler(
 async fn main() -> Result<()> {
     if let Ok(c) = load_config() {
         let api = YoutubeApi::new(c.api_key());
-        let (app_tx, app_rx) = mpsc::channel::<events::AppActions>();
-        let (background_tx, background_rx) = mpsc::channel::<events::BackgroundActions>();
+        let (app_tx, app_rx) = mpsc::channel::<AppActions>();
+        let (background_tx, background_rx) = mpsc::channel::<BackgroundActions>();
 
         std::thread::spawn(move || {
             start_background_task_handler(background_rx, app_tx, api);
