@@ -34,7 +34,7 @@ where
         )
         .split(f.size());
 
-    let messages = [Text::raw(BANNER)];
+    let messages = [Text::raw(BANNER), Text::raw(&state.banner)];
 
     let messages = Paragraph::new(messages.iter())
         .block(Block::default().borders(Borders::NONE))

@@ -6,6 +6,7 @@ pub struct State {
     pub input_mode: InputMode,
     /// History of recorded messages
     pub messages: Vec<String>,
+    pub banner: String,
 }
 impl Default for State {
     fn default() -> Self {
@@ -13,6 +14,7 @@ impl Default for State {
             input: String::new(),
             input_mode: InputMode::Normal,
             messages: Vec::new(),
+            banner: String::new(),
         }
     }
 }

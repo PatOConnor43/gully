@@ -18,8 +18,8 @@ pub struct BackgroundTaskHandler<T> {
     sender: std::sync::mpsc::Sender<T>,
 }
 
-impl<T> BackgroundTaskHandler<T> {
-    pub fn new(api: YoutubeApi, sender: std::sync::mpsc::Sender<T>) -> Self {
+impl BackgroundTaskHandler<AppActions> {
+    pub fn new(api: YoutubeApi, sender: std::sync::mpsc::Sender<AppActions>) -> Self {
         Self { api, sender }
     }
 
@@ -33,7 +33,22 @@ impl<T> BackgroundTaskHandler<T> {
                         channel_id: None,
                     })
                     .await;
-                eprintln!("{:?}", result);
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                self.sender.send(AppActions::Update("1".to_owned()));
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                self.sender.send(AppActions::Update("2".to_owned()));
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                self.sender.send(AppActions::Update("3".to_owned()));
+                //match result {
+                //    Ok(r) => {
+                //        self.sender
+                //            .send(AppActions::Update("hey".to_owned()))
+                //            .unwrap();
+                //    }
+                //    Err(e) => {
+                //        eprintln!("{:?}", e);
+                //    }
+                //}
             }
         }
     }

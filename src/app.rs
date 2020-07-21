@@ -1,4 +1,3 @@
-use crate::client;
 use crate::config;
 use crate::events;
 use crate::state;
@@ -16,7 +15,6 @@ pub enum AppLifecyle {
 
 /// App holds the state of the application
 pub struct App {
-    app_event_rx: Receiver<events::AppActions>,
     background_event_tx: Sender<events::BackgroundActions>,
     config: config::Config,
     events: events::Events,
@@ -30,16 +28,16 @@ impl App {
         c: config::Config,
     ) -> Self {
         let mut app = App {
-            app_event_rx: rx,
             background_event_tx: tx,
             config: c.clone(),
-            events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate()),
+            events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate(), rx),
             state: state::State::default(),
         };
         app.background_event_tx
             .send(events::BackgroundActions::YoutubeQuery(
                 "ryan celsius".to_owned(),
-            ));
+            ))
+            .unwrap();
         app
     }
     pub fn dispatch(&mut self, e: events::Event) {
@@ -104,6 +102,9 @@ impl App {
                     },
                 }
             }
+            events::Event::AppActionWrapper(action) => match action {
+                events::AppActions::Update(u) => self.state.banner = u,
+            },
             _ => {}
         }
         Ok(AppLifecyle::Continue)
