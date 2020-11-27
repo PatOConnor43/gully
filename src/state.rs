@@ -7,14 +7,16 @@ pub struct State {
     /// History of recorded messages
     pub messages: Vec<String>,
     pub banner: String,
+    pub titles: Vec<String>,
 }
 impl Default for State {
     fn default() -> Self {
         State {
+            banner: String::new(),
             input: String::new(),
             input_mode: InputMode::Normal,
             messages: Vec::new(),
-            banner: String::new(),
+            titles: Vec::new(),
         }
     }
 }

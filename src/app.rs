@@ -63,7 +63,7 @@ impl App {
     where
         B: Backend,
     {
-        ui::demo(f, &self.state);
+        ui::search(f, &self.state);
     }
     pub fn mode(&self) -> state::InputMode {
         self.state.input_mode
@@ -103,7 +103,7 @@ impl App {
                 }
             }
             events::Event::AppActionWrapper(action) => match action {
-                events::AppActions::Update(u) => self.state.banner = u,
+                events::AppActions::SearchResponseAction(r) => self.state.titles = r.titles,
             },
             _ => {}
         }

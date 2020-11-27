@@ -1,3 +1,4 @@
+use crate::models::SearchResponse;
 use crate::state::InputMode;
 use std::io;
 use std::sync::mpsc;
@@ -23,7 +24,7 @@ pub enum Event {
 
 /// AppActions should be handled by the app, dispatched by a background task.
 pub enum AppActions {
-    Update(String),
+    SearchResponseAction(SearchResponse),
 }
 
 /// BackgroundActions should be handled by the background task queue, dispatched by the app.

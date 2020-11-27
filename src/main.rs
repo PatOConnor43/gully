@@ -1,11 +1,13 @@
 mod app;
 mod config;
 mod events;
+mod models;
 mod state;
 mod ui;
 
 use crate::app::App;
 use crate::events::{AppActions, BackgroundActions};
+use crate::models::SearchResponse;
 use anyhow::Result;
 use std::io;
 use std::sync::mpsc;
@@ -26,29 +28,30 @@ impl BackgroundTaskHandler<AppActions> {
     pub async fn handle_event(&self, e: BackgroundActions) {
         match e {
             BackgroundActions::YoutubeQuery(q) => {
-                let _result = self
+                let result = self
                     .api
                     .search(youtube_api::models::SearchRequestBuilder {
                         query: Some(q),
                         channel_id: None,
                     })
                     .await;
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                self.sender.send(AppActions::Update("1".to_owned()));
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                self.sender.send(AppActions::Update("2".to_owned()));
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                self.sender.send(AppActions::Update("3".to_owned()));
-                //match result {
-                //    Ok(r) => {
-                //        self.sender
-                //            .send(AppActions::Update("hey".to_owned()))
-                //            .unwrap();
-                //    }
-                //    Err(e) => {
-                //        eprintln!("{:?}", e);
-                //    }
-                //}
+
+                match result {
+                    Ok(r) => {
+                        let titles = r
+                            .items
+                            .iter()
+                            .map(|i| i.snippet.title.clone())
+                            .collect::<Vec<String>>();
+                        self.sender
+                            .send(AppActions::SearchResponseAction(SearchResponse::new(
+                                titles,
+                            )));
+                    }
+                    Err(e) => {
+                        eprintln!("{:?}", e);
+                    }
+                }
             }
         }
     }
