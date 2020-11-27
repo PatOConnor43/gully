@@ -1,5 +1,5 @@
 [package]
-name = "oxy"
+name = "gully"
 version = "0.1.0"
 authors = ["Pat O'Connor <patoconnor43@gmail.com>"]
 edition = "2018"
@@ -11,6 +11,6 @@ anyhow = "1.0"
 youtube_dl = "0.5.0"
 youtube-api = "*"
 tokio = { version = "0.2", features = ["full"] }
-tui = { git = "https://github.com/fdehau/tui-rs" }
+tui = "^0.13.0"
 termion = "^1.5.0"
 unicode-width = "^0.1.0"

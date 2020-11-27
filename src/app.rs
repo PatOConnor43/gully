@@ -6,7 +6,7 @@ use anyhow::Result;
 use std::sync::mpsc::{Receiver, Sender};
 use termion::event::Key;
 use tui::{backend::Backend, Frame};
-use youtube_api::YoutubeApi;
+//use youtube_api::YoutubeApi;
 
 pub enum AppLifecyle {
     Continue,
@@ -35,7 +35,7 @@ impl App {
         };
         app.background_event_tx
             .send(events::BackgroundActions::YoutubeQuery(
-                "ryan celsius".to_owned(),
+                "cat videos".to_owned(),
             ))
             .unwrap();
         app

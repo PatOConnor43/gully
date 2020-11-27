@@ -1,4 +1,4 @@
-use crate::{config::Config, state::InputMode};
+use crate::state::InputMode;
 use std::io;
 use std::sync::mpsc;
 use std::sync::{

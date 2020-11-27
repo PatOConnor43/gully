@@ -3,17 +3,22 @@ use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style},
-    widgets::{Block, Borders, Paragraph, Text},
+    text::{Spans, Text},
+    widgets::{Block, Borders, Paragraph},
     Frame,
 };
 use unicode_width::UnicodeWidthStr;
 const BANNER: &'static str = r#"
                              
-    _____  ___   _ 
-   / _ \ \/ / | | |
-  | (_) >  <| |_| |
-   \___/_/\_\\__, |
-              |___/ 
+                                          
+                        _/  _/
+     _/_/_/  _/    _/  _/  _/  _/    _/
+  _/    _/  _/    _/  _/  _/  _/    _/
+ _/    _/  _/    _/  _/  _/  _/    _/
+  _/_/_/    _/_/_/  _/  _/    _/_/_/
+     _/                          _/
+_/_/                        _/_/
+
 
                "#;
 
@@ -34,23 +39,19 @@ where
         )
         .split(f.size());
 
-    let messages = [Text::raw(BANNER), Text::raw(&state.banner)];
-
-    let messages = Paragraph::new(messages.iter())
+    let messages = Paragraph::new(Text::raw(BANNER))
         .block(Block::default().borders(Borders::NONE))
         .alignment(Alignment::Center);
     f.render_widget(messages, chunks[0]);
 
     let msg = match state.input_mode {
-        InputMode::Normal => "Press q to exit, e to start editing.",
+        InputMode::Normal => "Press C-c to exit, e to start editing.",
         InputMode::Editing => "Press Esc to stop editing, Enter to record the message",
     };
-    let text = [Text::raw(msg)];
-    let help_message = Paragraph::new(text.iter());
+    let help_message = Paragraph::new(Spans::from(msg));
     f.render_widget(help_message, chunks[1]);
 
-    let text = [Text::raw(state.input.clone())];
-    let input = Paragraph::new(text.iter())
+    let input = Paragraph::new(Spans::from(state.input.clone()))
         .style(Style::default().fg(Color::Yellow))
         .block(Block::default().borders(Borders::ALL).title("Input"));
     f.render_widget(input, chunks[2]);

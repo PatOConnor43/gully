@@ -26,7 +26,7 @@ impl BackgroundTaskHandler<AppActions> {
     pub async fn handle_event(&self, e: BackgroundActions) {
         match e {
             BackgroundActions::YoutubeQuery(q) => {
-                let result = self
+                let _result = self
                     .api
                     .search(youtube_api::models::SearchRequestBuilder {
                         query: Some(q),
