@@ -72,7 +72,7 @@ async fn start_background_task_handler(
 #[tokio::main]
 async fn main() -> Result<()> {
     if let Ok(c) = load_config() {
-        let api = YoutubeApi::new(c.api_key());
+        let api = YoutubeApi::new(&c.api_key);
         let (app_tx, app_rx) = mpsc::channel::<AppActions>();
         let (background_tx, background_rx) = mpsc::channel::<BackgroundActions>();
 

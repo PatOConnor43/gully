@@ -1,5 +1,4 @@
 use crate::state::{InputMode, State};
-use tui::text::Span;
 use tui::widgets::List;
 use tui::widgets::ListItem;
 use tui::{

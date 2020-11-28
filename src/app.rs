@@ -27,10 +27,10 @@ impl App {
         tx: Sender<events::BackgroundActions>,
         c: config::Config,
     ) -> Self {
-        let mut app = App {
+        let app = App {
             background_event_tx: tx,
             config: c.clone(),
-            events: events::Events::new(c.keys().exit_key(), c.behavior().tick_rate(), rx),
+            events: events::Events::new(c.keys.exit_key, c.behavior.tick_rate, rx),
             state: state::State::default(),
         };
         app.background_event_tx
@@ -72,7 +72,7 @@ impl App {
         match self.events.next()? {
             events::Event::Input(input) => {
                 // bail early if we ^C
-                if input == self.config.keys().exit_key() {
+                if input == self.config.keys.exit_key {
                     return Ok(AppLifecyle::Quit);
                 }
 

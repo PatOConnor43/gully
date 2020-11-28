@@ -3,37 +3,27 @@ use termion::event::Key;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
-    api_key: String,
-    behavior: BehaviorConfig,
-    keys: KeyConfig,
+    pub api_key: String,
+    pub behavior: BehaviorConfig,
+    pub keys: KeyConfig,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let key = env!("YOUTUBE_API_KEY");
+        let key = option_env!("YOUTUBE_API_KEY");
         Self {
-            api_key: key.to_owned(),
+            api_key: key.unwrap_or("test").to_owned(),
             behavior: BehaviorConfig::default(),
             keys: KeyConfig::default(),
         }
     }
 }
 
-impl Config {
-    pub fn api_key(&self) -> &str {
-        &self.api_key
-    }
-    pub fn behavior(&self) -> BehaviorConfig {
-        self.behavior
-    }
-    pub fn keys(&self) -> KeyConfig {
-        self.keys
-    }
-}
+impl Config {}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct BehaviorConfig {
-    tick_rate: Duration,
+    pub tick_rate: Duration,
 }
 
 impl Default for BehaviorConfig {
@@ -44,15 +34,11 @@ impl Default for BehaviorConfig {
     }
 }
 
-impl BehaviorConfig {
-    pub fn tick_rate(&self) -> Duration {
-        self.tick_rate
-    }
-}
+impl BehaviorConfig {}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct KeyConfig {
-    exit_key: Key,
+    pub exit_key: Key,
 }
 
 impl Default for KeyConfig {
@@ -63,8 +49,4 @@ impl Default for KeyConfig {
     }
 }
 
-impl KeyConfig {
-    pub fn exit_key(&self) -> Key {
-        self.exit_key
-    }
-}
+impl KeyConfig {}
