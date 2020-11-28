@@ -1,6 +1,8 @@
 use crate::state::{InputMode, State};
 use tui::widgets::List;
 use tui::widgets::ListItem;
+use tui::widgets::Row;
+use tui::widgets::Table;
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -35,18 +37,30 @@ where
         .split(f.size());
 
     let mut index = 0;
-    let list = List::new(
-        state
-            .titles
-            .iter()
-            .map(|t| {
-                index += 1;
-                ListItem::new(Text::raw(format!("{}    {}", index, t)))
-            })
-            .collect::<Vec<ListItem>>(),
-    )
-    .block(Block::default().borders(Borders::NONE));
-    f.render_widget(list, chunks[0]);
+    //let list = List::new(
+    //    state
+    //        .titles
+    //        .iter()
+    //        .map(|t| {
+    //            index += 1;
+    //            ListItem::new(Text::raw(format!("{}    {}", index, t)))
+    //        })
+    //        .collect::<Vec<ListItem>>(),
+    //)
+    //.block(Block::default().borders(Borders::NONE));
+
+    let rows = state.titles.iter().map(|t| {
+        index += 1;
+        let row: Vec<String> = vec![index.to_string(), t.clone(), "33:33".into()];
+        Row::Data(row.into_iter())
+    });
+    let table = Table::new(vec!["test", "test", "test"].into_iter(), rows).widths(&[
+        Constraint::Min(5),
+        Constraint::Min(10),
+        Constraint::Max(8),
+    ]);
+
+    f.render_widget(table, chunks[0]);
 
     let msg = match state.input_mode {
         InputMode::Normal => "Press C-c to exit, e to start editing.",
