@@ -9,6 +9,7 @@ use crate::app::App;
 use crate::events::{AppActions, BackgroundActions};
 use crate::models::SearchResponse;
 use anyhow::Result;
+use models::SearchEntry;
 use std::io;
 use std::sync::mpsc;
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
@@ -38,14 +39,15 @@ impl BackgroundTaskHandler<AppActions> {
 
                 match result {
                     Ok(r) => {
-                        let titles = r
-                            .items
-                            .iter()
-                            .map(|i| i.snippet.title.clone())
-                            .collect::<Vec<String>>();
+                        //let mut entries: Vec<SearchEntry> = vec![];
+                        r.items.iter().for_each(|i| eprintln!("{:?}", i.snippet));
+
                         self.sender
                             .send(AppActions::SearchResponseAction(SearchResponse::new(
-                                titles,
+                                vec!["title 1", "title 2", "title 3", "title 4", "title 5"]
+                                    .into_iter()
+                                    .map(|t| t.to_owned())
+                                    .collect(),
                             )));
                     }
                     Err(e) => {
